@@ -5,7 +5,140 @@
 	{
 		"/actions/main":
 		{
-			"sources": [],
+			"sources": [
+				{
+					"mode": "button",
+					"path": "/user/hand/left/input/trigger",
+					"inputs":
+					{
+						"click":
+						{
+							"output": "/actions/main/in/FireArrowLeft"
+						}
+					}
+				},
+				{
+					"mode": "button",
+					"path": "/user/hand/right/input/trigger",
+					"inputs":
+					{
+						"click":
+						{
+							"output": "/actions/main/in/FireArrowRight"
+						}
+					}
+				},
+				{
+					"mode": "button",
+					"path": "/user/hand/left/input/trigger",
+					"inputs":
+					{
+						"click":
+						{
+							"output": "/actions/main/in/GrabLeft"
+						}
+					}
+				},
+				{
+					"mode": "button",
+					"path": "/user/hand/right/input/trigger",
+					"inputs":
+					{
+						"click":
+						{
+							"output": "/actions/main/in/GrabRight"
+						}
+					}
+				},
+				{
+					"mode": "button",
+					"path": "/user/hand/left/input/trackpad",
+					"inputs":
+					{
+						"click":
+						{
+							"output": "/actions/main/in/TeleportLeft"
+						}
+					}
+				},
+				{
+					"mode": "button",
+					"path": "/user/hand/right/input/trackpad",
+					"inputs":
+					{
+						"click":
+						{
+							"output": "/actions/main/in/TeleportRight"
+						}
+					}
+				},
+				{
+					"mode": "trackpad",
+					"path": "/user/hand/left/input/trackpad",
+					"inputs":
+					{
+						"position":
+						{
+							"output": "/actions/main/in/MoveLeft_X,MoveLeft_Y X Y_axis2d"
+						}
+					}
+				},
+				{
+					"mode": "trackpad",
+					"path": "/user/hand/right/input/trackpad",
+					"inputs":
+					{
+						"position":
+						{
+							"output": "/actions/main/in/MoveRight_X,MoveRight_Y X Y_axis2d"
+						}
+					}
+				},
+				{
+					"mode": "trigger",
+					"path": "/user/hand/left/input/trigger",
+					"inputs":
+					{
+						"pull":
+						{
+							"output": "/actions/main/in/SqueezeLeft axis"
+						}
+					}
+				},
+				{
+					"mode": "trigger",
+					"path": "/user/hand/right/input/trigger",
+					"inputs":
+					{
+						"pull":
+						{
+							"output": "/actions/main/in/SqueezeRight axis"
+						}
+					}
+				},
+				{
+					"mode": "trackpad",
+					"path": "/user/hand/left/input/trackpad",
+					"inputs":
+					{
+						"position":
+						{
+							"output": "/actions/main/in/TeleportDirectionLeft_X,TeleportDirectionLeft_Y X Y_axis2d"
+						}
+					}
+				},
+				{
+					"mode": "trackpad",
+					"path": "/user/hand/right/input/trackpad",
+					"inputs":
+					{
+						"position":
+						{
+							"output": "/actions/main/in/TeleportDirectionRight_X,TeleportDirectionRight_Y X Y_axis2d"
+						}
+					}
+				}
+			],
 			"poses": [
 				{
 					"output": "/actions/main/in/controllerleft",
