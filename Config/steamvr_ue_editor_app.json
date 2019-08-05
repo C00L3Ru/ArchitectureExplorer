@@ -1,0 +1,18 @@
+{
+	"source": "UE",
+	"applications": [
+		{
+			"app_key": "application.generated.ue.ue4editor-exe.ue4editor.exe",
+			"launch_type": "url",
+			"url": "steam://launch/",
+			"action_manifest_path": "C:/Users/jthor/Documents/Unreal Projects/Repos/ArchitectureExplorer/Config/SteamVRBindings/steamvr_manifest.json",
+			"strings":
+			{
+				"en_us":
+				{
+					"name": "UE4Editor.exe [UE Editor]"
+				}
+			}
+		}
+	]
+}

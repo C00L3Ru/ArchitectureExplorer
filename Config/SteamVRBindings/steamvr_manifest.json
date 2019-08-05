@@ -1,0 +1,49 @@
+{
+	"actions": [],
+	"action_sets": [
+		{
+			"name": "/actions/main",
+			"usage": "leftright"
+		}
+	],
+	"default_bindings": [
+		{
+			"controller_type": "gamepad",
+			"binding_url": "gamepad.json"
+		},
+		{
+			"controller_type": "holographic_controller",
+			"binding_url": "holographic_controller.json"
+		},
+		{
+			"controller_type": "index_hmd",
+			"binding_url": "index_hmd.json"
+		},
+		{
+			"controller_type": "knuckles",
+			"binding_url": "knuckles.json"
+		},
+		{
+			"controller_type": "oculus_touch",
+			"binding_url": "oculus_touch.json"
+		},
+		{
+			"controller_type": "vive",
+			"binding_url": "vive.json"
+		},
+		{
+			"controller_type": "vive_controller",
+			"binding_url": "vive_controller.json"
+		},
+		{
+			"controller_type": "vive_tracker",
+			"binding_url": "vive_tracker.json"
+		}
+	],
+	"localization": [
+		{
+			"language_tag": "en_us",
+			"/actions/main": "Main Game Actions"
+		}
+	]
+}
