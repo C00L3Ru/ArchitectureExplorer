@@ -6,6 +6,7 @@
 #include <Components/InputComponent.h>
 #include <Components/SceneComponent.h>
 #include <Components/CapsuleComponent.h>
+#include <Components/StaticMeshComponent.h>
 
 // Sets default values
 AVRCharacter::AVRCharacter()
@@ -17,9 +18,12 @@ AVRCharacter::AVRCharacter()
 	VRRoot = CreateDefaultSubobject<USceneComponent>(FName("VR Root"));
 	VRRoot->SetupAttachment(GetRootComponent());
 
-	// Setup  camera
+	// Setup  Camera
 	VRCamera = CreateDefaultSubobject<UCameraComponent>(FName("VR Camera"));
 	VRCamera->SetupAttachment(VRRoot);
+
+	TeleportDesinationMarker = CreateDefaultSubobject<UStaticMeshComponent>(FName("Teleport Destination Marker"));
+	TeleportDesinationMarker->SetupAttachment(VRRoot);
 
 }
 
@@ -34,20 +38,21 @@ void AVRCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
  
-	// Stored variables for calculating how far our charater should move in relation to our lcamera
- 	FVector VRCameraOffset = VRCamera->GetComponentLocation() - GetActorLocation();
-	VRCameraOffset.Z = 0.f;
-	// Move Character to camera location
-	AddActorWorldOffset(VRCameraOffset);
-	//Move VRRoot back to original location
-	VRRoot->AddWorldOffset(-VRCameraOffset);
+	//	Move  our capsule component to our VRCamera
+ 	FVector VRCameraOffset = VRCamera->GetComponentLocation() - GetActorLocation();	
+	VRCameraOffset.Z = 0.f;		// Leave the height axis alone
+	AddActorWorldOffset(VRCameraOffset);	// Move Character with Capsule Component attached to VRCamera location
+	VRRoot->AddWorldOffset(-VRCameraOffset);	// Move VRRoot back to original location (middle of our play space).
  
+
+
 }
 
 // Called to bind functionality to input
 void AVRCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
 	PlayerInputComponent->BindAxis(TEXT("MoveLeft_Y"), this, &AVRCharacter::MoveForward);
 	PlayerInputComponent->BindAxis(TEXT("MoveLeft_X"), this, &AVRCharacter::MoveRight);
 }

@@ -38,4 +38,6 @@ private:
 
 	class USceneComponent* VRRoot = nullptr;
 
+	UPROPERTY(VisibleAnywhere)
+	class UStaticMeshComponent* TeleportDesinationMarker = nullptr;
 };
