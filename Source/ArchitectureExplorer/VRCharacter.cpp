@@ -4,6 +4,8 @@
 #include "VRCharacter.h"
 #include <Camera/CameraComponent.h>
 #include <Components/InputComponent.h>
+#include <Components/SceneComponent.h>
+#include <Components/CapsuleComponent.h>
 
 // Sets default values
 AVRCharacter::AVRCharacter()
@@ -11,11 +13,13 @@ AVRCharacter::AVRCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	// Create a new Root component for our character
+	VRRoot = CreateDefaultSubobject<USceneComponent>(FName("VR Root"));
+	VRRoot->SetupAttachment(GetRootComponent());
+
 	// Setup  camera
 	VRCamera = CreateDefaultSubobject<UCameraComponent>(FName("VR Camera"));
-	VRCamera->SetupAttachment(GetRootComponent());
-	
-
+	VRCamera->SetupAttachment(VRRoot);
 
 }
 
@@ -23,14 +27,21 @@ AVRCharacter::AVRCharacter()
 void AVRCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
 void AVRCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+ 
+	// Stored variables for calculating how far our charater should move in relation to our lcamera
+ 	FVector VRCameraOffset = VRCamera->GetComponentLocation() - GetActorLocation();
+	VRCameraOffset.Z = 0.f;
+	// Move Character to camera location
+	AddActorWorldOffset(VRCameraOffset);
+	//Move VRRoot back to original location
+	VRRoot->AddWorldOffset(-VRCameraOffset);
+ 
 }
 
 // Called to bind functionality to input

@@ -36,4 +36,6 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	class UCameraComponent* VRCamera = nullptr;
 
+	class USceneComponent* VRRoot = nullptr;
+
 };
