@@ -31,6 +31,7 @@ AVRCharacter::AVRCharacter()
 void AVRCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	TeleportDesinationMarker->SetVisibility(false);
 }
 
 // Called every frame
@@ -44,8 +45,27 @@ void AVRCharacter::Tick(float DeltaTime)
 	AddActorWorldOffset(VRCameraOffset);	// Move Character with Capsule Component attached to VRCamera location
 	VRRoot->AddWorldOffset(-VRCameraOffset);	// Move VRRoot back to original location (middle of our play space).
  
+	UpdateDestinationMarker();
+}
 
+//LineTrace to place our TeleportDestinationMarker
+void AVRCharacter::UpdateDestinationMarker()
+{
+	FHitResult HitResult;
+	FVector Start = VRCamera->GetComponentLocation();
+	FVector End = Start + VRCamera->GetForwardVector() * MaxTeleportDistance;
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Camera);
 
+	// If we hit something
+	if (bHit)
+	{
+		TeleportDesinationMarker->SetWorldLocation(HitResult.Location);		// Move our marker
+		TeleportDesinationMarker->SetVisibility(true);
+	}
+	else
+	{
+		TeleportDesinationMarker->SetVisibility(false);		// Turn off our marker
+	}
 }
 
 // Called to bind functionality to input

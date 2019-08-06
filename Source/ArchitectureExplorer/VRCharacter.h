@@ -27,17 +27,24 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
-	// Functions and Variables for Input Bindings
+	void UpdateDestinationMarker();
+
+	// Functions Input Bindings
 	void MoveForward(float Throttle);
 	void MoveRight(float Throttle);
 
-	// Forward Declarations
 private:
-	UPROPERTY(VisibleAnywhere)
-	class UCameraComponent* VRCamera = nullptr;
-
+	// Forward Declarations
 	class USceneComponent* VRRoot = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
+	class UCameraComponent* VRCamera = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* TeleportDesinationMarker = nullptr;
+
+private:
+	// Variables
+	UPROPERTY(EditAnywhere)
+	float MaxTeleportDistance = 1000.f;	// Distance of line-trace out to.
 };
