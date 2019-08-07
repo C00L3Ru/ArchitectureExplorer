@@ -29,9 +29,12 @@ public:
 private:
 	void UpdateDestinationMarker();
 
-	// Functions Input Bindings
+	// Functions for Input Bindings
 	void MoveForward(float Throttle);
 	void MoveRight(float Throttle);
+	void BeginTelePort();
+	void EndTeleport();
+	
 
 private:
 	// Forward Declarations
@@ -47,4 +50,7 @@ private:
 	// Variables
 	UPROPERTY(EditAnywhere)
 	float MaxTeleportDistance = 1000.f;	// Distance of line-trace out to.
+	
+	UPROPERTY(EditAnywhere)
+	float CameraFadeTime = 1.f;
 };
