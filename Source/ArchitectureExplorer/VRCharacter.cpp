@@ -41,12 +41,16 @@ AVRCharacter::AVRCharacter()
 void AVRCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	PlayerController = Cast<APlayerController>(GetController());
+
 	TeleportDesinationMarker->SetVisibility(false);
+
+	
 	if (BlinkerMaterialBase != nullptr) 
 	{
 		BlinkerInstanceDynamic = UMaterialInstanceDynamic::Create(BlinkerMaterialBase, this, FName("Blinker Material Instance"));
 		PostProcessComponent->AddOrUpdateBlendable(BlinkerInstanceDynamic);
-		BlinkerInstanceDynamic->SetScalarParameterValue(FName("Radius"), Radius);
 		return; 
 	}
 	else
@@ -68,6 +72,8 @@ void AVRCharacter::Tick(float DeltaTime)
 	VRRoot->AddWorldOffset(-VRCameraOffset);	// Move VRRoot back to original location (middle of our play space).
  
 	UpdateDestinationMarker();
+	if (bCanUseBlinkers == true) { UpdateBlinkers(); }
+	
 }
 
 bool AVRCharacter::FindTeleportDestination(FVector& OutLocation)
@@ -151,11 +157,61 @@ void AVRCharacter::EndTeleport()
 // Function to Fade in or out when Teleporting
 void AVRCharacter::StartFade(float FromAlpha, float ToAlpha)
 {
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-
 	if (PlayerController != nullptr)
 	{
 		PlayerController->PlayerCameraManager->StartCameraFade(FromAlpha, ToAlpha, CameraFadeTime, FLinearColor::Black, false, true);
 	}
+}
 
+void AVRCharacter::UpdateBlinkers()
+{
+	if (RadiusVsVelocity == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Curve Float asset set in BP_VRCharacter!!!!"))
+		return;
+	}
+
+	// Use our curve float to adjust our Blinkers strengh based on our Speed
+	float Speed = GetVelocity().Size();
+	Radius = RadiusVsVelocity->GetFloatValue(Speed);
+	BlinkerInstanceDynamic->SetScalarParameterValue(FName("Radius"), Radius);
+
+	
+	// Used to Enhance our Blinkers
+	FVector2D Center = GetBlinkersCenter();
+	BlinkerInstanceDynamic->SetVectorParameterValue(FName("Center"), FLinearColor(Center.X, Center.Y, 0));
+}
+
+FVector2D AVRCharacter::GetBlinkersCenter()
+{
+	FVector MovementDirection = GetVelocity().GetSafeNormal();
+
+	if (MovementDirection.IsNearlyZero() || PlayerController == nullptr || !bCanUseEnhancedBlinkers)
+	{
+		return FVector2D(.5f, .5f);		// Return default values if criteria isn't met 
+	}
+
+	// find out if were moving forwards or backwards and store the direction were looking in
+	FVector WorldLocation;
+	if(FVector::DotProduct(VRCamera->GetForwardVector(), MovementDirection) > 0)	
+	{
+		 WorldLocation = VRCamera->GetComponentLocation() + MovementDirection * 1000;
+	}
+	else
+	{
+		WorldLocation = VRCamera->GetComponentLocation() - MovementDirection * 1000;
+	}
+
+	// Convert the direction were looking into 2D
+	FVector2D ScreenLocation; // OUT parameter
+	PlayerController->ProjectWorldLocationToScreen(WorldLocation, ScreenLocation);
+	
+	// Divide out ScreenLocation with Out Screen Size
+	int32 SizeX, SizeY;		  // OUT parameter
+	PlayerController->GetViewportSize(SizeX, SizeY);
+	ScreenLocation.X /= SizeX;
+	ScreenLocation.Y /= SizeY;
+
+	// Return the result so our Blinkers don't move in relation to our Head Movement (They stay fixed to the center of our viewport)
+	return ScreenLocation;
 }
