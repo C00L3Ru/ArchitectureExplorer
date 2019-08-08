@@ -55,6 +55,12 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* TeleportDesinationMarker = nullptr;
 
+	UPROPERTY(VisibleAnywhere)
+	class UMotionControllerComponent* LeftMotionController = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
+	class UMotionControllerComponent* RightMotionController = nullptr;
+
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Forward Declarations used to create our material on our post processing to create out Blinkers
 	UPROPERTY(EditAnywhere)

@@ -12,6 +12,8 @@
 #include <NavigationSystem.h>
 #include <Components/PostProcessComponent.h>
 #include <Materials/MaterialInstanceDynamic.h>
+#include <MotionControllerComponent.h>
+#include <XRMotionControllerBase.h>
 
 
 
@@ -29,11 +31,29 @@ AVRCharacter::AVRCharacter()
 	VRCamera = CreateDefaultSubobject<UCameraComponent>(FName("VR Camera"));
 	VRCamera->SetupAttachment(VRRoot);
 
+// 	LMotionController = CreateDefaultSubobject<UMotionControllerComponent>(FName("LeftMotionController"));
+// 	LMotionController->SetupAttachment(VRRoot);
+// 	LMotionController->SetTrackingSource(EControllerHand::Left);
+// 	RMotionController = CreateDefaultSubobject<UMotionControllerComponent>(FName("RightMotionController"));
+// 	RMotionController->SetupAttachment(VRRoot);
+// 	RMotionController->SetTrackingSource(EControllerHand::Right);
+
+	RightMotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("R_MotionController"));
+	RightMotionController->SetTrackingMotionSource(FXRMotionControllerBase::RightHandSourceId);
+	RightMotionController->SetShowDeviceModel(true);
+	RightMotionController->SetupAttachment(VRRoot);
+
+	LeftMotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("L_MotionController"));
+	LeftMotionController->SetTrackingMotionSource(FXRMotionControllerBase::LeftHandSourceId);
+	LeftMotionController->SetShowDeviceModel(true);
+	LeftMotionController->SetupAttachment(VRRoot);
+
 	TeleportDesinationMarker = CreateDefaultSubobject<UStaticMeshComponent>(FName("Teleport Destination Marker"));
 	TeleportDesinationMarker->SetupAttachment(VRRoot);
 
 	PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>(FName("Post Processing Component"));
 	PostProcessComponent->SetupAttachment(VRRoot);
+
 
 }
 
