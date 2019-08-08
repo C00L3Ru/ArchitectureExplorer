@@ -99,8 +99,10 @@ void AVRCharacter::Tick(float DeltaTime)
 bool AVRCharacter::FindTeleportDestination(FVector& OutLocation)
 {
 	FHitResult HitResult;
-	FVector Start = VRCamera->GetComponentLocation();
-	FVector End = Start + VRCamera->GetForwardVector() * MaxTeleportDistance;
+	FVector Start = LeftMotionController->GetComponentLocation();
+	FVector Look = LeftMotionController->GetForwardVector();
+	Look = Look.RotateAngleAxis(30, LeftMotionController->GetRightVector());
+	FVector End = Start + Look  * MaxTeleportDistance;
 
 	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility);
 
