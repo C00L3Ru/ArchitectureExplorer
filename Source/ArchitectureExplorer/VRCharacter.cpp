@@ -10,6 +10,8 @@
 #include <GameFramework/PlayerController.h>
 #include "Public/TimerManager.h"
 #include <NavigationSystem.h>
+#include <Components/PostProcessComponent.h>
+#include <Materials/MaterialInstanceDynamic.h>
 
 
 
@@ -30,6 +32,9 @@ AVRCharacter::AVRCharacter()
 	TeleportDesinationMarker = CreateDefaultSubobject<UStaticMeshComponent>(FName("Teleport Destination Marker"));
 	TeleportDesinationMarker->SetupAttachment(VRRoot);
 
+	PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>(FName("Post Processing Component"));
+	PostProcessComponent->SetupAttachment(VRRoot);
+
 }
 
 // Called when the game starts or when spawned
@@ -37,6 +42,18 @@ void AVRCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	TeleportDesinationMarker->SetVisibility(false);
+	if (BlinkerMaterialBase != nullptr) 
+	{
+		BlinkerInstanceDynamic = UMaterialInstanceDynamic::Create(BlinkerMaterialBase, this, FName("Blinker Material Instance"));
+		PostProcessComponent->AddOrUpdateBlendable(BlinkerInstanceDynamic);
+		BlinkerInstanceDynamic->SetScalarParameterValue(FName("Radius"), Radius);
+		return; 
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Blinker Material Base selected in BP_VRCharacter"))
+	}
+	
 }
 
 // Called every frame

@@ -41,12 +41,19 @@ private:
 private:
 	// Forward Declarations
 	class USceneComponent* VRRoot = nullptr;
+	class UPostProcessComponent* PostProcessComponent = nullptr;
+	class UMaterialInstanceDynamic* BlinkerInstanceDynamic = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
 	class UCameraComponent* VRCamera = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* TeleportDesinationMarker = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	class UMaterialInterface* BlinkerMaterialBase = nullptr; // Base material used to create a Dynamic Material Instance
+
+
 
 private:
 	// Variables
@@ -59,6 +66,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	FVector TeleportProjectionExtent = FVector(100.f, 100.f, 100.f);
 
+	float Radius = 0.2f;	//	Used for setting the Radius of The Blinkers
 	bool bCanTeleport = false;
 
 	
