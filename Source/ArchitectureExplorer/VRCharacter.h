@@ -27,7 +27,9 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
+	bool FindTeleportDestination(FVector& OutLocation);
 	void UpdateDestinationMarker();
+	void StartFade(float FromAlpha, float ToAlpha);
 
 	// Functions for Input Bindings
 	void MoveForward(float Throttle);
@@ -49,8 +51,15 @@ private:
 private:
 	// Variables
 	UPROPERTY(EditAnywhere)
-	float MaxTeleportDistance = 1000.f;	// Distance of line-trace out to.
+	float MaxTeleportDistance = 1000.f;	// Distance of line-trace from the VRCamera.
 	
 	UPROPERTY(EditAnywhere)
 	float CameraFadeTime = 1.f;
+
+	UPROPERTY(EditAnywhere)
+	FVector TeleportProjectionExtent = FVector(100.f, 100.f, 100.f);
+
+	bool bCanTeleport = false;
+
+	
 };

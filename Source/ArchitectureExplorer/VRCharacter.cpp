@@ -9,6 +9,8 @@
 #include <Components/StaticMeshComponent.h>
 #include <GameFramework/PlayerController.h>
 #include "Public/TimerManager.h"
+#include <NavigationSystem.h>
+
 
 
 // Sets default values
@@ -51,22 +53,44 @@ void AVRCharacter::Tick(float DeltaTime)
 	UpdateDestinationMarker();
 }
 
-//LineTrace to place our TeleportDestinationMarker
-void AVRCharacter::UpdateDestinationMarker()
+bool AVRCharacter::FindTeleportDestination(FVector& OutLocation)
 {
 	FHitResult HitResult;
 	FVector Start = VRCamera->GetComponentLocation();
 	FVector End = Start + VRCamera->GetForwardVector() * MaxTeleportDistance;
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Camera);
 
-	// If we hit something
-	if (bHit)
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility);
+
+	if (!bHit) return false;
+
+	UNavigationSystemV1* NavigationSystem = UNavigationSystemV1::GetNavigationSystem(GetWorld());
+	FNavLocation NavLocation;
+
+	bool bOnNavMesh = NavigationSystem->ProjectPointToNavigation(HitResult.Location, NavLocation, TeleportProjectionExtent);
+
+	if (!bOnNavMesh) return false;
+
+
+	OutLocation = NavLocation.Location;
+	return true;
+}
+
+
+void AVRCharacter::UpdateDestinationMarker()
+{
+	FVector Location;
+	bool bHasDeistinastion = FindTeleportDestination(Location);
+
+	// If we hit something and were on the NavMesh
+	if (bHasDeistinastion)
 	{
-		TeleportDesinationMarker->SetWorldLocation(HitResult.Location);		// Move our marker
+		bCanTeleport = true;
 		TeleportDesinationMarker->SetVisibility(true);
+		TeleportDesinationMarker->SetWorldLocation(Location);		// Move our marker
 	}
 	else
 	{
+		bCanTeleport = false;
 		TeleportDesinationMarker->SetVisibility(false);		// Turn off our marker
 	}
 }
@@ -93,11 +117,9 @@ void AVRCharacter::MoveRight(float Throttle)
 
 void AVRCharacter::BeginTelePort()
 {
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (PlayerController != nullptr)
-	{
-		PlayerController->PlayerCameraManager->StartCameraFade(0, 1, CameraFadeTime, FLinearColor::Black, false, true);
-	}
+	if (!bCanTeleport) { return; }
+	StartFade(0, 1);	// Fade camera out
+
 	// Timer Setup so we can fade out before we move to new location.
 	FTimerHandle TimerHandle;
 	GetWorldTimerManager().SetTimer(TimerHandle, this, &AVRCharacter::EndTeleport, CameraFadeTime);
@@ -105,11 +127,18 @@ void AVRCharacter::BeginTelePort()
 
 void AVRCharacter::EndTeleport()
 {
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (PlayerController != nullptr)
-	{
-		PlayerController->PlayerCameraManager->StartCameraFade(1, 0, CameraFadeTime, FLinearColor::Black);
-	}
+	StartFade(1, 0);	// Fade camera in
 	SetActorLocation(TeleportDesinationMarker->GetComponentLocation() + FVector(0, 0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight()));
 }
 
+// Function to Fade in or out when Teleporting
+void AVRCharacter::StartFade(float FromAlpha, float ToAlpha)
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+
+	if (PlayerController != nullptr)
+	{
+		PlayerController->PlayerCameraManager->StartCameraFade(FromAlpha, ToAlpha, CameraFadeTime, FLinearColor::Black, false, true);
+	}
+
+}
