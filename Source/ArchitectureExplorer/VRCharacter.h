@@ -53,6 +53,9 @@ private:
 	class UCameraComponent* VRCamera = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
+	class USplineComponent* TeleportPath = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* TeleportDesinationMarker = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
@@ -74,10 +77,20 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
 private:
-	// Variables to use with TelePorting
+	// Variables to use with PrdictProjectilePath for Teleporting
 	UPROPERTY(EditAnywhere)
-	float MaxTeleportDistance = 1000.f;	// Distance of line-trace from the VRCamera.
+	float TeleportProjectileSpeed = 800.f;	
+
+	UPROPERTY(EditAnywhere)
+	float TeleportProjectileRadius = 10.f;	
+
+	UPROPERTY(EditAnywhere)
+	float TeleportSimulationTime = 1.f;
+
 	
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 	UPROPERTY(EditAnywhere)
 	float CameraFadeTime = 1.f;
 

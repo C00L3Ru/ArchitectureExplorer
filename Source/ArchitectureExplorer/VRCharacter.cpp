@@ -14,6 +14,8 @@
 #include <Materials/MaterialInstanceDynamic.h>
 #include <MotionControllerComponent.h>
 #include <XRMotionControllerBase.h>
+#include <Kismet/GameplayStatics.h>
+#include <Components/SplineComponent.h>
 
 
 
@@ -31,13 +33,6 @@ AVRCharacter::AVRCharacter()
 	VRCamera = CreateDefaultSubobject<UCameraComponent>(FName("VR Camera"));
 	VRCamera->SetupAttachment(VRRoot);
 
-// 	LMotionController = CreateDefaultSubobject<UMotionControllerComponent>(FName("LeftMotionController"));
-// 	LMotionController->SetupAttachment(VRRoot);
-// 	LMotionController->SetTrackingSource(EControllerHand::Left);
-// 	RMotionController = CreateDefaultSubobject<UMotionControllerComponent>(FName("RightMotionController"));
-// 	RMotionController->SetupAttachment(VRRoot);
-// 	RMotionController->SetTrackingSource(EControllerHand::Right);
-
 	RightMotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("R_MotionController"));
 	RightMotionController->SetTrackingMotionSource(FXRMotionControllerBase::RightHandSourceId);
 	RightMotionController->SetShowDeviceModel(true);
@@ -47,6 +42,9 @@ AVRCharacter::AVRCharacter()
 	LeftMotionController->SetTrackingMotionSource(FXRMotionControllerBase::LeftHandSourceId);
 	LeftMotionController->SetShowDeviceModel(true);
 	LeftMotionController->SetupAttachment(VRRoot);
+
+	TeleportPath = CreateDefaultSubobject<USplineComponent>(TEXT("Teleport Path"));
+	TeleportPath->SetupAttachment(LeftMotionController);
 
 	TeleportDesinationMarker = CreateDefaultSubobject<UStaticMeshComponent>(FName("Teleport Destination Marker"));
 	TeleportDesinationMarker->SetupAttachment(VRRoot);
@@ -96,22 +94,34 @@ void AVRCharacter::Tick(float DeltaTime)
 	
 }
 
+// Use PredictProjectilePath() to get a Parabolic curve for a visual guide for teleporting onto our NavMesh
 bool AVRCharacter::FindTeleportDestination(FVector& OutLocation)
 {
-	FHitResult HitResult;
 	FVector Start = LeftMotionController->GetComponentLocation();
 	FVector Look = LeftMotionController->GetForwardVector();
-	Look = Look.RotateAngleAxis(30, LeftMotionController->GetRightVector());
-	FVector End = Start + Look  * MaxTeleportDistance;
+	
+	FPredictProjectilePathParams PredictParams(
+		TeleportProjectileRadius,
+		Start,
+		Look * TeleportProjectileSpeed,
+		TeleportSimulationTime,
+		ECollisionChannel::ECC_Camera,
+		this);
+	
+	PredictParams.DrawDebugType = EDrawDebugTrace::ForOneFrame;
+	FPredictProjectilePathResult PredictResult;
+	bool bHit = UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility);
+
+
 
 	if (!bHit) return false;
 
 	UNavigationSystemV1* NavigationSystem = UNavigationSystemV1::GetNavigationSystem(GetWorld());
 	FNavLocation NavLocation;
 
-	bool bOnNavMesh = NavigationSystem->ProjectPointToNavigation(HitResult.Location, NavLocation, TeleportProjectionExtent);
+	bool bOnNavMesh = NavigationSystem->ProjectPointToNavigation(PredictResult.HitResult.Location, NavLocation, TeleportProjectionExtent);
+	
 
 	if (!bOnNavMesh) return false;
 
@@ -124,6 +134,7 @@ bool AVRCharacter::FindTeleportDestination(FVector& OutLocation)
 void AVRCharacter::UpdateDestinationMarker()
 {
 	FVector Location;
+
 	bool bHasDeistinastion = FindTeleportDestination(Location);
 
 	// If we hit something and were on the NavMesh
