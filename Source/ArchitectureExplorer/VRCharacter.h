@@ -29,10 +29,11 @@ public:
 private:
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Functions used for Teleportation
-	bool FindTeleportDestination(FVector& OutLocation);
+	bool FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation);
 	void UpdateDestinationMarker();
 	void StartFade(float FromAlpha, float ToAlpha);
 	void UpdateBlinkers();
+	void UpdateSpline(const TArray<FVector>& Path);
 	FVector2D GetBlinkersCenter();
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
