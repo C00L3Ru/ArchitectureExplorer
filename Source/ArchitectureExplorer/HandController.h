@@ -28,6 +28,22 @@ public:
 	void SetHand(EControllerHand Hand) { MotionController->SetTrackingSource(Hand); }
 
 private:
+	UFUNCTION()
+	void ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
+	
+	UFUNCTION()
+	void ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
+
+	bool CanClimb() const;
+
+private:
 	UPROPERTY(VisibleAnywhere)
 	UMotionControllerComponent* MotionController = nullptr;
+
+private:
+	
+
+
+	bool bCanClimb = false;
+
 };
