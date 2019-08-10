@@ -40,6 +40,11 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	UMotionControllerComponent* MotionController = nullptr;
 
+	class APlayerController* PlayerController = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	class UHapticFeedbackEffect_Base* HapticEffect;
+
 private:
 	
 

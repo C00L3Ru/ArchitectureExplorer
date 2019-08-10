@@ -4,6 +4,7 @@
 #include "HandController.h"
 #include <MotionControllerComponent.h>
 #include <XRMotionControllerBase.h>
+#include <GameFramework/PlayerController.h>
 
 // Sets default values
 AHandController::AHandController()
@@ -23,6 +24,7 @@ void AHandController::BeginPlay()
 	OnActorBeginOverlap.AddDynamic(this, &AHandController::ActorBeginOverlap);
 	OnActorEndOverlap.AddDynamic(this, &AHandController::ActorEndOverlap);
 
+	PlayerController = GetWorld()->GetFirstPlayerController();
 }
 
 // Called every frame
@@ -38,6 +40,7 @@ void AHandController::ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherAc
 	if (!bCanClimb && bNewCanClimb)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Object is Climbable"))
+		PlayerController->PlayHapticEffect(HapticEffect, MotionController->GetTrackingSource());
 	}
 	bCanClimb = bNewCanClimb;
 }
