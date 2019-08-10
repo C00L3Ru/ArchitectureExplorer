@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "HandController.h"
 #include "VRCharacter.generated.h"
 
 UCLASS()
@@ -41,7 +42,11 @@ private:
 	// Functions for Input Bindings
 	void MoveForward(float Throttle);
 	void MoveRight(float Throttle);
-	void BeginTelePort();
+	void GripLeft() { LeftMotionController->Grip(); }
+	void ReleaseLeft() { LeftMotionController->Release(); }
+	void GripRight() { RightMotionController->Grip(); }
+	void ReleaseRight() { RightMotionController->Release(); }
+	void BeginTelePort() ;
 	void EndTeleport();
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -55,10 +60,10 @@ private:
 	class UCameraComponent* VRCamera = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
-	class AHandController* LeftMotionController = nullptr;
+	AHandController* LeftMotionController = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
-	class AHandController* RightMotionController = nullptr;
+	AHandController* RightMotionController = nullptr;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AHandController> HandControllerClass; 

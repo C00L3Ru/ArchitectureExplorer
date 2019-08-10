@@ -2,8 +2,8 @@
 
 
 #include "HandController.h"
-#include <MotionControllerComponent.h>
 #include <XRMotionControllerBase.h>
+#include <GameFramework/MovementComponent.h>
 #include <GameFramework/PlayerController.h>
 
 // Sets default values
@@ -23,19 +23,44 @@ void AHandController::BeginPlay()
 	Super::BeginPlay();
 	OnActorBeginOverlap.AddDynamic(this, &AHandController::ActorBeginOverlap);
 	OnActorEndOverlap.AddDynamic(this, &AHandController::ActorEndOverlap);
-
 	PlayerController = GetWorld()->GetFirstPlayerController();
+
 }
 
 // Called every frame
 void AHandController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (bIsClimbing)
+	{
+		FVector HandControllerDelta = GetActorLocation() - CLimbingStartingLocation;
+		GetAttachParentActor()->AddActorWorldOffset(-HandControllerDelta);
+	}
+}
 
+void AHandController::Grip()
+{
+	if (!bCanClimb)
+	{
+		return;
+	}
+	if (!bIsClimbing)
+	{
+		bIsClimbing = true;
+		CLimbingStartingLocation = GetActorLocation();
+	}
+}
+
+void AHandController::Release()
+{
+	bIsClimbing = false;
 }
 
 void AHandController::ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
+	if (!PlayerController) { UE_LOG(LogTemp, Warning, TEXT("No Player Controller")) return; }
+	
+	
 	bool bNewCanClimb = CanClimb();
 	if (!bCanClimb && bNewCanClimb)
 	{

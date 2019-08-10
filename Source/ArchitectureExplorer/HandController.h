@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include <MotionControllerComponent.h>
+
 #include "HandController.generated.h"
 
 UCLASS()
@@ -26,6 +27,8 @@ public:
 
 public:
 	void SetHand(EControllerHand Hand) { MotionController->SetTrackingSource(Hand); }
+	void Grip();
+	void Release();
 
 private:
 	UFUNCTION()
@@ -42,6 +45,8 @@ private:
 
 	class APlayerController* PlayerController = nullptr;
 
+	class UMovementComponent* MovemtComponent = nullptr;
+
 	UPROPERTY(EditAnywhere)
 	class UHapticFeedbackEffect_Base* HapticEffect;
 
@@ -50,5 +55,7 @@ private:
 
 
 	bool bCanClimb = false;
+	bool bIsClimbing = false;
+	FVector CLimbingStartingLocation;
 
 };
