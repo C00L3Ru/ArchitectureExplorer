@@ -16,6 +16,7 @@
 #include <XRMotionControllerBase.h>
 #include <Kismet/GameplayStatics.h>
 #include <Components/SplineComponent.h>
+#include <Components/SplineMeshComponent.h>
 
 
 
@@ -51,8 +52,6 @@ AVRCharacter::AVRCharacter()
 
 	PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>(FName("Post Processing Component"));
 	PostProcessComponent->SetupAttachment(VRRoot);
-
-
 }
 
 // Called when the game starts or when spawned
@@ -63,7 +62,6 @@ void AVRCharacter::BeginPlay()
 	PlayerController = Cast<APlayerController>(GetController());
 
 	TeleportDesinationMarker->SetVisibility(false);
-
 	
 	if (BlinkerMaterialBase != nullptr) 
 	{
@@ -75,7 +73,6 @@ void AVRCharacter::BeginPlay()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No Blinker Material Base selected in BP_VRCharacter"))
 	}
-	
 }
 
 // Called every frame
@@ -91,7 +88,29 @@ void AVRCharacter::Tick(float DeltaTime)
  
 	UpdateDestinationMarker();
 	if (bCanUseBlinkers == true) { UpdateBlinkers(); }
-	
+}
+
+void AVRCharacter::UpdateDestinationMarker()
+{
+	FVector Location;
+	TArray<FVector> Path;
+	bool bHasDeistinastion = FindTeleportDestination(Path, Location);
+
+	// If we hit something and were on the NavMesh
+	if (bHasDeistinastion)
+	{
+		bCanTeleport = true;
+		TeleportDesinationMarker->SetVisibility(true);
+		TeleportDesinationMarker->SetWorldLocation(Location);		// Move our marker
+		DrawTeleportPath(Path);
+	}
+	else
+	{
+		TArray<FVector> EmptyPath;
+		bCanTeleport = false;
+		TeleportDesinationMarker->SetVisibility(false);		// Turn off our marker
+		DrawTeleportPath(EmptyPath);
+	}
 }
 
 // Use PredictProjectilePath() to get a Parabolic curve for a visual guide for teleporting onto our NavMesh
@@ -108,10 +127,8 @@ bool AVRCharacter::FindTeleportDestination(TArray<FVector>& OutPath, FVector& Ou
 		ECollisionChannel::ECC_Camera,
 		this);
 	
-	PredictParams.DrawDebugType = EDrawDebugTrace::ForOneFrame;
 	FPredictProjectilePathResult PredictResult;
 	bool bHit = UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
-
 
 	if (!bHit) return false;
 
@@ -122,84 +139,60 @@ bool AVRCharacter::FindTeleportDestination(TArray<FVector>& OutPath, FVector& Ou
 
 	UNavigationSystemV1* NavigationSystem = UNavigationSystemV1::GetNavigationSystem(GetWorld());
 	FNavLocation NavLocation;
-
 	bool bOnNavMesh = NavigationSystem->ProjectPointToNavigation(PredictResult.HitResult.Location, NavLocation, TeleportProjectionExtent);
-	
 
 	if (!bOnNavMesh) return false;
-
 
 	OutLocation = NavLocation.Location;
 	return true;
 }
 
-
-void AVRCharacter::UpdateDestinationMarker()
+void AVRCharacter::DrawTeleportPath(const TArray<FVector>& Path)
 {
-	FVector Location;
-	TArray<FVector> Path;
+	UpdateSpline(Path);
 
-
-	bool bHasDeistinastion = FindTeleportDestination(Path, Location);
-
-	// If we hit something and were on the NavMesh
-	if (bHasDeistinastion)
+	for (USplineMeshComponent* SplineMesh : TeleportPathMeshPool)
 	{
-		bCanTeleport = true;
-		TeleportDesinationMarker->SetVisibility(true);
-		TeleportDesinationMarker->SetWorldLocation(Location);		// Move our marker
-		UpdateSpline(Path);
+		SplineMesh->SetVisibility(false);
 	}
-	else
+
+	int32 SegmentNum = Path.Num() - 1;
+
+	for (int32 i = 0; i < SegmentNum; ++i)
 	{
-		bCanTeleport = false;
-		TeleportDesinationMarker->SetVisibility(false);		// Turn off our marker
+		if (TeleportPathMeshPool.Num() <= i)
+		{
+			USplineMeshComponent* SplineMesh = NewObject<USplineMeshComponent>(this);
+			SplineMesh->SetMobility(EComponentMobility::Movable);
+			SplineMesh->AttachToComponent(TeleportPath, FAttachmentTransformRules::KeepRelativeTransform);
+			SplineMesh->SetStaticMesh(TeleportArcMesh);
+			SplineMesh->SetMaterial(0, TeleportArcMaterial);
+			SplineMesh->RegisterComponent();
+			TeleportPathMeshPool.Add(SplineMesh);
+		}
+		USplineMeshComponent* SplineMesh = TeleportPathMeshPool[i];
+		SplineMesh->SetVisibility(true);
+
+		FVector StartPosition, StartTangent, EndPosition, EndTangent;
+
+		TeleportPath->GetLocalLocationAndTangentAtSplinePoint(i, StartPosition, StartTangent);
+		TeleportPath->GetLocalLocationAndTangentAtSplinePoint(i+1, EndPosition, EndTangent);
+
+		SplineMesh->SetStartAndEnd(StartPosition, StartTangent, EndPosition, EndTangent, true);
 	}
 }
 
-// Called to bind functionality to input
-void AVRCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AVRCharacter::UpdateSpline(const TArray<FVector>& Path)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	TeleportPath->ClearSplinePoints(false);
 
-	PlayerInputComponent->BindAxis(TEXT("MoveLeft_Y"), this, &AVRCharacter::MoveForward);
-	PlayerInputComponent->BindAxis(TEXT("MoveLeft_X"), this, &AVRCharacter::MoveRight);
-	PlayerInputComponent->BindAction(TEXT("TelePortLeft"), IE_Released, this, &AVRCharacter::BeginTelePort);
-}
-
-void AVRCharacter::MoveForward(float Throttle)
-{
-	AddMovementInput(VRCamera->GetForwardVector(), Throttle);
-}
-
-void AVRCharacter::MoveRight(float Throttle)
-{
-	AddMovementInput(VRCamera->GetRightVector(), Throttle);
-}
-
-void AVRCharacter::BeginTelePort()
-{
-	if (!bCanTeleport) { return; }
-	StartFade(0, 1);	// Fade camera out
-
-	// Timer Setup so we can fade out before we move to new location.
-	FTimerHandle TimerHandle;
-	GetWorldTimerManager().SetTimer(TimerHandle, this, &AVRCharacter::EndTeleport, CameraFadeTime);
-}
-
-void AVRCharacter::EndTeleport()
-{
-	StartFade(1, 0);	// Fade camera in
-	SetActorLocation(TeleportDesinationMarker->GetComponentLocation() + FVector(0, 0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight()));
-}
-
-// Function to Fade in or out when Teleporting
-void AVRCharacter::StartFade(float FromAlpha, float ToAlpha)
-{
-	if (PlayerController != nullptr)
+	for (int32 i = 0; i < Path.Num(); ++i)
 	{
-		PlayerController->PlayerCameraManager->StartCameraFade(FromAlpha, ToAlpha, CameraFadeTime, FLinearColor::Black, false, true);
+		FVector LocalPosition = TeleportPath->GetComponentTransform().InverseTransformPosition(Path[i]);
+		FSplinePoint Point(i, LocalPosition, ESplinePointType::Curve);
+		TeleportPath->AddPoint(Point, false);
 	}
+	TeleportPath->UpdateSpline();
 }
 
 void AVRCharacter::UpdateBlinkers()
@@ -215,24 +208,9 @@ void AVRCharacter::UpdateBlinkers()
 	Radius = RadiusVsVelocity->GetFloatValue(Speed);
 	BlinkerInstanceDynamic->SetScalarParameterValue(FName("Radius"), Radius);
 
-	
 	// Used to Enhance our Blinkers
 	FVector2D Center = GetBlinkersCenter();
 	BlinkerInstanceDynamic->SetVectorParameterValue(FName("Center"), FLinearColor(Center.X, Center.Y, 0));
-}
-
-void AVRCharacter::UpdateSpline(const TArray<FVector>& Path)
-{
-	TeleportPath->ClearSplinePoints(false);
-
-	for (int32 i = 0; i < Path.Num(); ++i)
-	{
-		FVector LocalPosition = TeleportPath->GetComponentTransform().InverseTransformPosition(Path[i]);
-		FSplinePoint Point(i, LocalPosition, ESplinePointType::Curve);
-		TeleportPath->AddPoint(Point, false);
-	}
-
-	TeleportPath->UpdateSpline();
 }
 
 FVector2D AVRCharacter::GetBlinkersCenter()
@@ -267,4 +245,52 @@ FVector2D AVRCharacter::GetBlinkersCenter()
 
 	// Return the result so our Blinkers don't move in relation to our Head Movement (They stay fixed to the center of our viewport)
 	return ScreenLocation;
+}
+
+// Called to bind functionality to input
+void AVRCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAxis(TEXT("MoveLeft_Y"), this, &AVRCharacter::MoveForward);
+	PlayerInputComponent->BindAxis(TEXT("MoveLeft_X"), this, &AVRCharacter::MoveRight);
+	PlayerInputComponent->BindAction(TEXT("TelePortLeft"), IE_Released, this, &AVRCharacter::BeginTelePort);
+}
+
+void AVRCharacter::MoveForward(float Throttle)
+{
+	AddMovementInput(VRCamera->GetForwardVector(), Throttle);
+}
+
+void AVRCharacter::MoveRight(float Throttle)
+{
+	AddMovementInput(VRCamera->GetRightVector(), Throttle);
+}
+
+void AVRCharacter::BeginTelePort()
+{
+	if (!bCanTeleport) { return; }
+	StartFade(0, 1);	// Fade camera out
+
+	// Timer Setup so we can fade out before we move to new location.
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, this, &AVRCharacter::EndTeleport, CameraFadeTime);
+}
+
+void AVRCharacter::EndTeleport()
+{
+	FVector Destination = TeleportDesinationMarker->GetComponentLocation();
+	Destination += GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * GetActorUpVector();
+
+	StartFade(1, 0);	// Fade camera in
+	SetActorLocation( Destination );
+}
+
+// Function to Fade in or out when Teleporting
+void AVRCharacter::StartFade(float FromAlpha, float ToAlpha)
+{
+	if (PlayerController != nullptr)
+	{
+		PlayerController->PlayerCameraManager->StartCameraFade(FromAlpha, ToAlpha, CameraFadeTime, FLinearColor::Black, false, true);
+	}
 }

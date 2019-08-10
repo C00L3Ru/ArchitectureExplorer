@@ -33,6 +33,7 @@ private:
 	void UpdateDestinationMarker();
 	void StartFade(float FromAlpha, float ToAlpha);
 	void UpdateBlinkers();
+	void DrawTeleportPath(const TArray<FVector>& Path);
 	void UpdateSpline(const TArray<FVector>& Path);
 	FVector2D GetBlinkersCenter();
 
@@ -54,16 +55,27 @@ private:
 	class UCameraComponent* VRCamera = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
-	class USplineComponent* TeleportPath = nullptr;
-
-	UPROPERTY(VisibleAnywhere)
-	class UStaticMeshComponent* TeleportDesinationMarker = nullptr;
-
-	UPROPERTY(VisibleAnywhere)
 	class UMotionControllerComponent* LeftMotionController = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
 	class UMotionControllerComponent* RightMotionController = nullptr;
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Forward Declarations used  for parabolic curve and Teleport Destination Marker
+	UPROPERTY(VisibleAnywhere)
+	class USplineComponent* TeleportPath = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<class USplineMeshComponent*> TeleportPathMeshPool;
+
+	UPROPERTY(EditAnywhere)
+	class UStaticMesh* TeleportArcMesh;
+
+	UPROPERTY(EditAnywhere)
+	class UMaterialInterface* TeleportArcMaterial;
+
+	UPROPERTY(VisibleAnywhere)
+	class UStaticMeshComponent* TeleportDesinationMarker = nullptr;
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Forward Declarations used to create our material on our post processing to create out Blinkers
@@ -75,8 +87,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class UCurveFloat* RadiusVsVelocity = nullptr;	// Curve asset that is used to alter the radius of our Blinkers material based on our movement speed.
-//------------------------------------------------------------------------------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------------------------------------------------------------------------------
 private:
 	// Variables to use with PrdictProjectilePath for Teleporting
 	UPROPERTY(EditAnywhere)
@@ -88,10 +100,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	float TeleportSimulationTime = 1.f;
 
-	
 //------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 	UPROPERTY(EditAnywhere)
 	float CameraFadeTime = 1.f;
 
@@ -107,8 +116,8 @@ private:
 	bool bCanUseEnhancedBlinkers = false;
 
 	float Radius = 0.f;	//	Used for setting the Radius of The Blinkers
+
 //------------------------------------------------------------------------------------------------------------------------------------------------------
-	
 	bool bCanTeleport = false;
 	
 };
