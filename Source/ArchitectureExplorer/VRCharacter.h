@@ -55,10 +55,13 @@ private:
 	class UCameraComponent* VRCamera = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
-	class UMotionControllerComponent* LeftMotionController = nullptr;
+	class AHandController* LeftMotionController = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
-	class UMotionControllerComponent* RightMotionController = nullptr;
+	class AHandController* RightMotionController = nullptr;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AHandController> HandControllerClass; 
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Forward Declarations used  for parabolic curve and Teleport Destination Marker
@@ -102,10 +105,10 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 	UPROPERTY(EditAnywhere)
-	float CameraFadeTime = 1.f;
+	float CameraFadeTime = 1.f;   // Variable used in StartCameraFade()
 
 	UPROPERTY(EditAnywhere)
-	FVector TeleportProjectionExtent = FVector(100.f, 100.f, 100.f);
+	FVector TeleportProjectionExtent = FVector(100.f, 100.f, 100.f);   // Variable used in ProjectPointToNavigation()
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Simple booleans for using Blinkers or Enhanced Blinkers

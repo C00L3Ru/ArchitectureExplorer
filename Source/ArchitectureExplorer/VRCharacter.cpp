@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "VRCharacter.h"
 #include <Camera/CameraComponent.h>
 #include <Components/InputComponent.h>
@@ -17,8 +16,7 @@
 #include <Kismet/GameplayStatics.h>
 #include <Components/SplineComponent.h>
 #include <Components/SplineMeshComponent.h>
-
-
+#include "HandController.h"
 
 // Sets default values
 AVRCharacter::AVRCharacter()
@@ -34,18 +32,8 @@ AVRCharacter::AVRCharacter()
 	VRCamera = CreateDefaultSubobject<UCameraComponent>(FName("VR Camera"));
 	VRCamera->SetupAttachment(VRRoot);
 
-	RightMotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("R_MotionController"));
-	RightMotionController->SetTrackingMotionSource(FXRMotionControllerBase::RightHandSourceId);
-	RightMotionController->SetShowDeviceModel(true);
-	RightMotionController->SetupAttachment(VRRoot);
-
-	LeftMotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("L_MotionController"));
-	LeftMotionController->SetTrackingMotionSource(FXRMotionControllerBase::LeftHandSourceId);
-	LeftMotionController->SetShowDeviceModel(true);
-	LeftMotionController->SetupAttachment(VRRoot);
-
 	TeleportPath = CreateDefaultSubobject<USplineComponent>(TEXT("Teleport Path"));
-	TeleportPath->SetupAttachment(LeftMotionController);
+	TeleportPath->SetupAttachment(VRRoot); // TODO attach to our controllers
 
 	TeleportDesinationMarker = CreateDefaultSubobject<UStaticMeshComponent>(FName("Teleport Destination Marker"));
 	TeleportDesinationMarker->SetupAttachment(VRRoot);
@@ -61,6 +49,25 @@ void AVRCharacter::BeginPlay()
 
 	PlayerController = Cast<APlayerController>(GetController());
 
+	// Setup of our MotionControllers using our HandController actor.
+	LeftMotionController = GetWorld()->SpawnActor<AHandController>(HandControllerClass);
+	LeftMotionController->SetOwner(this);
+
+	if (LeftMotionController != nullptr)
+	{
+		LeftMotionController->AttachToComponent(VRRoot,FAttachmentTransformRules::KeepRelativeTransform);
+		LeftMotionController->SetHand(EControllerHand::Left);
+	}
+
+	RightMotionController = GetWorld()->SpawnActor<AHandController>(HandControllerClass);
+	RightMotionController->SetOwner(this);
+	if (RightMotionController != nullptr)
+	{
+		RightMotionController->AttachToComponent(VRRoot, FAttachmentTransformRules::KeepRelativeTransform);
+		RightMotionController->SetHand(EControllerHand::Right);
+	}
+
+	// Setup of our Blinker Material
 	TeleportDesinationMarker->SetVisibility(false);
 	
 	if (BlinkerMaterialBase != nullptr) 
@@ -116,8 +123,8 @@ void AVRCharacter::UpdateDestinationMarker()
 // Use PredictProjectilePath() to get a Parabolic curve for a visual guide for teleporting onto our NavMesh
 bool AVRCharacter::FindTeleportDestination(TArray<FVector>& OutPath, FVector& OutLocation)
 {
-	FVector Start = LeftMotionController->GetComponentLocation();
-	FVector Look = LeftMotionController->GetForwardVector();
+	FVector Start = LeftMotionController->GetActorLocation();
+	FVector Look = LeftMotionController->GetActorForwardVector();
 	
 	FPredictProjectilePathParams PredictParams(
 		TeleportProjectileRadius,
