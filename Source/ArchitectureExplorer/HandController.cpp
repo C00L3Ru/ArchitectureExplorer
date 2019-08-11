@@ -5,6 +5,8 @@
 #include <XRMotionControllerBase.h>
 #include <GameFramework/MovementComponent.h>
 #include <GameFramework/PlayerController.h>
+#include "GameFramework/CharacterMovementComponent.h"
+#include <GameFramework/Character.h>
 
 // Sets default values
 AHandController::AHandController()
@@ -24,7 +26,7 @@ void AHandController::BeginPlay()
 	OnActorBeginOverlap.AddDynamic(this, &AHandController::ActorBeginOverlap);
 	OnActorEndOverlap.AddDynamic(this, &AHandController::ActorEndOverlap);
 	PlayerController = GetWorld()->GetFirstPlayerController();
-
+	ACharacter* Character = Cast<ACharacter>(GetAttachParentActor());
 }
 
 // Called every frame
@@ -38,33 +40,49 @@ void AHandController::Tick(float DeltaTime)
 	}
 }
 
+void AHandController::PairController(AHandController* Controller)
+{
+	OtherController = Controller;
+	OtherController->OtherController = this;
+}
+
 void AHandController::Grip()
 {
-	if (!bCanClimb)
-	{
-		return;
-	}
+	if (!bCanClimb) { return; }
+
 	if (!bIsClimbing)
 	{
 		bIsClimbing = true;
 		CLimbingStartingLocation = GetActorLocation();
+		OtherController->bIsClimbing = false;
+
+		if (Character != nullptr)
+		{
+			Character->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+		}
 	}
 }
 
 void AHandController::Release()
 {
-	bIsClimbing = false;
+	if (bIsClimbing)
+	{
+		bIsClimbing = false;
+		if (Character != nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("should be falling!!!"))
+			Character->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Falling);
+		}
+	}
 }
 
 void AHandController::ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
 	if (!PlayerController) { UE_LOG(LogTemp, Warning, TEXT("No Player Controller")) return; }
 	
-	
 	bool bNewCanClimb = CanClimb();
 	if (!bCanClimb && bNewCanClimb)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Object is Climbable"))
 		PlayerController->PlayHapticEffect(HapticEffect, MotionController->GetTrackingSource());
 	}
 	bCanClimb = bNewCanClimb;
@@ -73,7 +91,6 @@ void AHandController::ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherAc
 void AHandController::ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
 	bCanClimb = CanClimb();
-
 }
 
 bool AHandController::CanClimb() const

@@ -67,6 +67,8 @@ void AVRCharacter::BeginPlay()
 		RightMotionController->SetHand(EControllerHand::Right);
 	}
 
+	LeftMotionController->PairController(RightMotionController);
+
 	// Setup of our Blinker Material
 	TeleportDesinationMarker->SetVisibility(false);
 	

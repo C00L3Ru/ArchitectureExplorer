@@ -24,13 +24,18 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+//------------------------------------------------------------------------------------------------------------------------------------------------------
 
 public:
+	// Public Functions for setting up our controller
 	void SetHand(EControllerHand Hand) { MotionController->SetTrackingSource(Hand); }
+	void PairController(AHandController* Controller);
 	void Grip();
 	void Release();
+//------------------------------------------------------------------------------------------------------------------------------------------------------
 
 private:
+	// Functions for setting up whether we can climb
 	UFUNCTION()
 	void ActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
 	
@@ -38,21 +43,22 @@ private:
 	void ActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
 	bool CanClimb() const;
+//------------------------------------------------------------------------------------------------------------------------------------------------------
 
 private:
 	UPROPERTY(VisibleAnywhere)
 	UMotionControllerComponent* MotionController = nullptr;
 
-	class APlayerController* PlayerController = nullptr;
-
-	class UMovementComponent* MovemtComponent = nullptr;
-
 	UPROPERTY(EditAnywhere)
 	class UHapticFeedbackEffect_Base* HapticEffect;
 
-private:
-	
+	class APlayerController* PlayerController = nullptr;
+	class ACharacter* Character = nullptr;
 
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+private:
+	AHandController* OtherController;
 
 	bool bCanClimb = false;
 	bool bIsClimbing = false;
